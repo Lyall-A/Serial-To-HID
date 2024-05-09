@@ -5,7 +5,7 @@ using System.Threading;
 
 class Program
 {
-    const int waitTime = 1000;
+    const int waitTime = 5 * 1000;
 
     [DllImport("user32.dll")]
     public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
@@ -47,6 +47,7 @@ class Program
             {
                 Console.WriteLine("Connecting to serial port");
                 serialPort.Open();
+                serialPort.DtrEnable = true;
                 Console.WriteLine("Connected to serial port");
                 while (serialPort.IsOpen) { };
                 Console.WriteLine("Connection to serial port closed");
@@ -73,13 +74,34 @@ class Program
 
             if (type == "k")
             {
-                // Keyboard
+                // Key press
                 SendKeys(value);
+            }
+            else
+            if (type == "kd")
+            {
+                // Key down
+                SendKeysDown(value);
+            }
+            else
+            if (type == "ku")
+            {
+                // Key up
+                SendKeysUp(value);
             }
             else
             if (type == "m")
             {
-                // Mouse
+                // Set Mouse
+                string[] movePositions = value.Split(',');
+                int moveX = int.Parse(movePositions[0]);
+                int moveY = int.Parse(movePositions[1]);
+                SetCursorPos(moveX, moveY);
+                //MoveMouse(moveX, moveY);
+            }
+            if (type == "mm")
+            {
+                // Move Mouse
                 string[] movePositions = value.Split(',');
                 int moveX = int.Parse(movePositions[0]);
                 int moveY = int.Parse(movePositions[1]);
@@ -98,6 +120,24 @@ class Program
         {
             byte keyCode = (byte)char.ToUpper(key);
             keybd_event(keyCode, 0, 0x0000, UIntPtr.Zero); // Press down
+            keybd_event(keyCode, 0, 0x0002, UIntPtr.Zero); // Release
+        }
+    }
+
+    static void SendKeysDown(string keys)
+    {
+        foreach (char key in keys)
+        {
+            byte keyCode = (byte)char.ToUpper(key);
+            keybd_event(keyCode, 0, 0x0000, UIntPtr.Zero); // Press down
+        }
+    }
+
+    static void SendKeysUp(string keys)
+    {
+        foreach (char key in keys)
+        {
+            byte keyCode = (byte)char.ToUpper(key);
             keybd_event(keyCode, 0, 0x0002, UIntPtr.Zero); // Release
         }
     }
